@@ -83,8 +83,19 @@ func handleEvent(messaging gjson.Result) {
 			handleAttachment(psid, session, attachments)
 		}
 	}
-	if postback := messaging.Get(`postback`); session.State == `asking` && postback.Exists() {
-		handleAnswer(psid, session, postback.Get(`payload`).String())
+	if postback := messaging.Get(`postback`); postback.Exists() {
+		payload := postback.Get(`payload`).String()
+		switch session.State {
+		case `asking`:
+			handleAnswer(psid, session, payload)
+			break
+		case `canceling`:
+			handleText(psid, session, payload)
+			break
+		default:
+			handleCommand(psid, session, payload)
+			break
+		}
 	}
 }
 
@@ -241,8 +252,9 @@ func handleCommand(psid string, session *Session, command string) {
 	case `#greet`:
 		break
 	default:
+		sendText(psid, templates.Get(`wrongcommand.intro`).Value().([]interface{})...)
 		var postback Postback
-		json.Unmarshal([]byte(templates.Get(`wrongcommand`).Raw), &postback)
+		json.Unmarshal([]byte(templates.Get(`wrongcommand.questions`).Array()[0].Raw), &postback)
 		sendPostback(psid, postback)
 		break
 	}

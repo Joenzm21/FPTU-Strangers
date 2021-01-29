@@ -1,18 +1,23 @@
 {
     "wrongcommand": {
-        "template_type": "button",
-        "text": "The commands must be started with #. Do you need help?",
-        "buttons": [
+        "intro": ["The commands must be started with #"],
+        "questions": [
             {
-                "type": "postback",
-                "title": "📖 Help",
-                "payload": "#help"
+                "template_type": "button",
+                "text": "Do you need help?",
+                "buttons": [
+                    {
+                        "type": "postback",
+                        "title": "📖 Help",
+                        "payload": "#help"
+                    }
+                ]
             }
         ]
     },
     "already": {
         "template_type": "button",
-        "text": "You must cancel other action before doing this thing",
+        "text": "Please cancel other action before doing this",
         "buttons": [
             {
                 "type": "postback",
@@ -68,12 +73,12 @@
                 "buttons": [
                     {
                         "type": "postback",
-                        "title": "Male ♂️",
+                        "title": "Male 👦",
                         "payload": "male"
                     },
                     {
                         "type": "postback",
-                        "title": "Female ♀️",
+                        "title": "Female 👸",
                         "payload": "female"
                     }
                 ],
