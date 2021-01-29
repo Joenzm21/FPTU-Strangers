@@ -29,7 +29,7 @@ type FindingRequest struct {
 	Psid     string
 	Year     int
 	Gender   string
-	Attempts int32
+	Attempts int
 	User     User
 	Session  *Session
 }

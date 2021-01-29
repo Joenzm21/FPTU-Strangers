@@ -1,22 +1,27 @@
 package main
 
+import (
+	"os"
+	"strconv"
+)
+
 //PageAccessToken -
-const PageAccessToken = `EAAFsQcULQysBABD4bN1G2SgdrOlh4nVtOrgyG9A5ETylzqlGBcpZC3NA8y5Mbb43Q3ixCxIUbIjlTMEjZB4B3pddCq4y7hYZBXayNZC3ug9VdjoDn5bb5wRS7I4jxAP3H7ycAwTViZC5JDkbxy4YmWkYw8TI3tnRkjdG0H7F0HZAZAgiJH2Dtaqjasmg7wGZB7QZD`
+var PageAccessToken = os.Getenv(`PageAccessToken`)
 
 //VerifyToken -
-const VerifyToken = `hellofptu`
+var VerifyToken = os.Getenv(`VerifyToken`)
 
 //BasicAuth -
-const BasicAuth = `Joenzm21:b2e0f9ec02281facb8a6a9a3c1712a509db0c060`
+var BasicAuth = os.Getenv(`BasicAuth`)
 
 //GistID -
-const GistID = `fc39d55a564c2c82fe342bce4e0a3047`
+var GistID = os.Getenv(`GistID`)
 
 //MaxAgeDiff -
-const MaxAgeDiff = 3
+var MaxAgeDiff, _ = strconv.Atoi(os.Getenv(`MaxAgeDiff`))
 
 //MaxAttempt -
-const MaxAttempt = 4
+var MaxAttempt, _ = strconv.Atoi(os.Getenv(`MaxAttempt`))
 
 //Limit -
-const Limit = 100
+var Limit, _ = strconv.Atoi(os.Getenv(`Limit`))
