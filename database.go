@@ -10,7 +10,7 @@ import (
 
 var userList = &sync.Map{}
 var banned = &sync.Map{}
-var backupInterval = time.NewTicker(time.Second * 10)
+var backupInterval = time.NewTicker(time.Minute * 10)
 var changed = false
 
 func backup() {

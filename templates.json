@@ -30,14 +30,17 @@
                 "text": "Please rate this conversation",
                 "buttons": [
                     {
+                        "type": "postback",
                         "title": "Friendly 😇",
                         "payload": "friendly"
                     },
                     {
+                        "type": "postback",
                         "title": "Unfriendly 😒",
                         "payload": "unfriendly"
                     },
                     {
+                        "type": "postback",
                         "title": "Scam 👿",
                         "payload": "scam"
                     },
@@ -60,13 +63,16 @@
         "onFull": ["Sorry, I currently can't handle your request", "You can try again another time"],
         "questions": [
             {
+                "template_type": "button",
                 "text": "Which gender are you looking for?",
                 "buttons": [
                     {
+                        "type": "postback",
                         "title": "Male ♂️",
                         "payload": "male"
                     },
                     {
+                        "type": "postback",
                         "title": "Female ♀️",
                         "payload": "female"
                     }
@@ -84,10 +90,12 @@
         "text": "Are you sure to cancel?",
         "buttons": [
             {
+                "type": "postback",
                 "title": "Yes ✅",
                 "payload": "yes"
             },
             {
+                "type": "postback",
                 "title": "No ❌",
                 "payload": "no"
             }

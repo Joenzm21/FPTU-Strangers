@@ -3,10 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/mitchellh/mapstructure"
 
 	"github.com/ahmetb/go-linq"
 	jsoniter "github.com/json-iterator/go"
@@ -37,7 +36,7 @@ func sendRawMessages(psid string, objs ...interface{}) {
 		}
 		payload, _ = ioutil.ReadAll(response.Body)
 		if errmess := gjson.Get(string(payload), `error.message`); errmess.Exists() {
-			panic(errmess.String())
+			panic(errors.New(errmess.String()))
 		}
 	}
 }
@@ -54,7 +53,7 @@ func sendPostback(psid string, postback Postback) {
 func sendQuestion(psid string, questions []gjson.Result, counter int) {
 	if questions[counter].Get(`buttons`).Exists() {
 		var postback Postback
-		mapstructure.Decode(questions[counter].Value(), &postback)
+		json.Unmarshal([]byte(questions[counter].Raw), &postback)
 		sendPostback(psid, postback)
 	} else {
 		sendText(psid, questions[counter].Get(`text`).String())

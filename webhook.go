@@ -2,7 +2,6 @@ package main
 
 import (
 	"container/list"
-	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -10,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mitchellh/mapstructure"
 	"github.com/tidwall/gjson"
 )
 
@@ -140,7 +138,7 @@ func handleCommand(psid string, session *Session, command string) {
 	case `#getstarted`:
 		if session.State == `finding` || session.State == `chating` {
 			var postback Postback
-			mapstructure.Decode(templates.Get(`already`).Value(), &postback)
+			json.Unmarshal([]byte(templates.Get(`already`).Raw), &postback)
 			sendPostback(psid, postback)
 			return
 		}
@@ -184,7 +182,6 @@ func handleCommand(psid string, session *Session, command string) {
 					othersession := result.(*Session)
 					othersession.State = `idle`
 					othersession.StateInfo = nil
-					fmt.Println(qaState.LastStateInfo)
 				}
 				session.State = `idle`
 				session.StateInfo = nil
@@ -236,7 +233,7 @@ func handleCommand(psid string, session *Session, command string) {
 			session.State = `idle`
 		}
 		var postback Postback
-		mapstructure.Decode(templates.Get(`cancel`).Value(), &postback)
+		json.Unmarshal([]byte(templates.Get(`cancel`).Raw), &postback)
 		sendPostback(psid, postback)
 		session.State = `canceling`
 		session.StateInfo = cancelingState
@@ -245,7 +242,7 @@ func handleCommand(psid string, session *Session, command string) {
 		break
 	default:
 		var postback Postback
-		mapstructure.Decode(templates.Get(`wrongcommand`).Value(), &postback)
+		json.Unmarshal([]byte(templates.Get(`wrongcommand`).Raw), &postback)
 		sendPostback(psid, postback)
 		break
 	}
