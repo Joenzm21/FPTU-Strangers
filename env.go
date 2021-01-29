@@ -7,7 +7,7 @@ const PageAccessToken = `EAAFsQcULQysBABD4bN1G2SgdrOlh4nVtOrgyG9A5ETylzqlGBcpZC3
 const VerifyToken = `hellofptu`
 
 //BasicAuth -
-const BasicAuth = `Joenzm21:eb4a3ddbe7138d6befa78ce779aee3b87f2ce8e5`
+const BasicAuth = `Joenzm21:b2e0f9ec02281facb8a6a9a3c1712a509db0c060`
 
 //GistID -
 const GistID = `fc39d55a564c2c82fe342bce4e0a3047`

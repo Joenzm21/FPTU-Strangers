@@ -85,6 +85,8 @@ func sendAttachmentURL(psid string, attachmentType string, url string) {
 func getGistFile(id string, filename string) gjson.Result {
 	request, _ := http.NewRequest(`GET`, `https://api.github.com/gists/`+id, nil)
 	request.Header.Add(`Accept`, `application/vnd.github.v3+json`)
+	request.Header.Add(`Authorization`, `Basic `+
+		base64.StdEncoding.EncodeToString([]byte(BasicAuth)))
 	response, err := client.Do(request)
 
 	if err != nil {
