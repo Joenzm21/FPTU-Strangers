@@ -1,0 +1,126 @@
+{
+    "wrongcommand": {
+        "template_type": "button",
+        "text": "The commands must be started with #. Do you need help?",
+        "buttons": [
+            {
+                "type": "postback",
+                "title": "📖 Help",
+                "payload": "#help"
+            }
+        ]
+    },
+    "already": {
+        "template_type": "button",
+        "text": "You must cancel other action before doing this thing",
+        "buttons": [
+            {
+                "type": "postback",
+                "title": "🛑 Cancel",
+                "payload": "#cancel"
+            }
+        ]
+    },
+    "rating": {
+        "intro": ["Please take some time to rate this conversation"],
+        "outro": ["Thanks for your rating", "It'll help improve people's experience"],
+        "questions": [
+            {
+                "template_type": "button",
+                "text": "Please rate this conversation",
+                "buttons": [
+                    {
+                        "title": "Friendly 😇",
+                        "payload": "friendly"
+                    },
+                    {
+                        "title": "Unfriendly 😒",
+                        "payload": "unfriendly"
+                    },
+                    {
+                        "title": "Scam 👿",
+                        "payload": "scam"
+                    },
+                    {
+                        "title": "Return ↩️",
+                        "payload": "return"
+                    }
+                ],
+                "errormessage": "The answer only can be the above buttons"
+            }
+        ]
+    },
+    "banned": ["Sorry, but you have been banned", "Because of scamming or talking to other strangers unfriendly"],
+    "notify": ["Hey 👋", "I found that person!", "Now feel free to talk 😆"],
+    "getstarted": {
+        "intro": ["Now I will ask about your criteria"],
+        "outro": ["I will notify you if someone is right for you"],
+        "onCancel": ["Your request was canceled"],
+        "onDrop": ["Sorry, your request was dropped", "You can try again another time"],
+        "onFull": ["Sorry, I currently can't handle your request", "You can try again another time"],
+        "questions": [
+            {
+                "text": "Which gender are you looking for?",
+                "buttons": [
+                    {
+                        "title": "Male ♂️",
+                        "payload": "male"
+                    },
+                    {
+                        "title": "Female ♀️",
+                        "payload": "female"
+                    }
+                ],
+                "errormessage": "The answer only can be Male or Female 😆"
+            },
+            {
+                "text": "What age do you want?",
+                "errormessage": ["It should be a year in numeric, not something else"]
+            }
+        ]
+    },
+    "cancel": {
+        "template_type": "button",
+        "text": "Are you sure to cancel?",
+        "buttons": [
+            {
+                "title": "Yes ✅",
+                "payload": "yes"
+            },
+            {
+                "title": "No ❌",
+                "payload": "no"
+            }
+        ],
+        "errormessage": "The answer only can be the above buttons",
+        "responses": {}
+    },
+    "personal": {
+        "intro": ["Hi!👋", "Look like this is your first time contacting me", "So please answer some of my questions!"],
+        "outro": ["Thanks for answering", "Now you can use the chatbot 😆"],
+        "onCancel": ["Seem like you didn't agree with sharing personal information", "But I still welcome your comeback in the future"],
+        "questions": [
+            {
+                "template_type": "button",
+                "text": "Are you Male or Female?",
+                "buttons": [
+                    {
+                        "type": "postback",
+                        "title": "Male ♂️",
+                        "payload": "male"
+                    },
+                    {
+                        "type": "postback",
+                        "title": "Female ♀️",
+                        "payload": "female"
+                    }
+                ],
+                "errormessage": "The answer only can be Male or Female 😆"
+            },
+            {
+                "text": "What year were you born?",
+                "errormessage": "It should be a year in numeric, not something else"
+            }
+        ]
+    }
+}
