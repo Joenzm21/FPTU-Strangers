@@ -141,7 +141,7 @@ func handleAnswer(psid string, session *Session, answer string) {
 }
 func handleAttachment(psid string, session *Session, attachments gjson.Result) {
 	for _, item := range attachments.Array() {
-		sendAttachmentURL(psid, item.Get(`type`).String(), item.Get(`payload.url`).String())
+		sendAttachmentURL(session.StateInfo.(string), item.Get(`type`).String(), item.Get(`payload.url`).String())
 	}
 }
 func handleCommand(psid string, session *Session, command string) {
@@ -180,6 +180,10 @@ func handleCommand(psid string, session *Session, command string) {
 	case `#help`:
 		break
 	case `#cancel`:
+		if session.State == `idle` {
+			sendText(psid, templates.Get(`nothing`).String())
+			return
+		}
 		if session.State == `chating` {
 			startAsking(psid, session, templates.Get(`rating`), checkRating, func() {
 				qaState := session.StateInfo.(*QAState)

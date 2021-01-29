@@ -17,10 +17,17 @@ func startRR() {
 
 		request1 := queue.Dequeue().(*FindingRequest)
 		next := queue.Back()
+		if request1 == nil {
+			continue
+		}
 		success := false
 		for next != nil {
 			request2 := next.Value.(*FindingRequest)
-			if isSuitable(request1, request2) {
+			if request1.Psid == request2.Psid {
+				next = next.Next()
+				queue.Remove(next)
+				continue
+			} else if isSuitable(request1, request2) {
 				queue.Remove(next)
 				request1.Session.State, request2.Session.State = `chating`, `chating`
 				request1.Session.StateInfo, request2.Session.StateInfo = request2.Psid, request1.Psid

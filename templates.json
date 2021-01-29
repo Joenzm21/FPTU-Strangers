@@ -15,6 +15,7 @@
             }
         ]
     },
+    "nothing": "You don't have anything to cancel",
     "already": {
         "template_type": "button",
         "text": "Please cancel other action before doing this",

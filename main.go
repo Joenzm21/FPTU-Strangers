@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ var templates gjson.Result
 
 func main() {
 	download()
+	fmt.Println(userList)
 	payload, _ := ioutil.ReadFile(`templates.json`)
 	templates = gjson.ParseBytes(payload)
 	go startRR()
