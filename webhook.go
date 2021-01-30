@@ -180,9 +180,11 @@ func handleCommand(psid string, session *Session, command string) {
 			}
 		}, func(oldState interface{}) {})
 		break
-	case `#aboutyou`:
+	case `#aboutme`:
+		sendText(psid, templates.Get(`aboutme`).Value().([]interface{})...)
 		break
 	case `#help`:
+		sendText(psid, templates.Get(`help`).Value().([]interface{})...)
 		break
 	case `#cancel`:
 		if session.State == `idle` {
@@ -253,8 +255,6 @@ func handleCommand(psid string, session *Session, command string) {
 		sendPostback(psid, postback)
 		session.State = `canceling`
 		session.StateInfo = cancelingState
-		break
-	case `#greet`:
 		break
 	default:
 		sendText(psid, templates.Get(`wrongcommand.intro`).Value().([]interface{})...)

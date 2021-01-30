@@ -1,4 +1,19 @@
 {
+    "aboutme": [
+        "You are willing to make friend with other but don't how to do 😟",
+        "Don't worry, I can help you 🙋",
+        "I'm a chatbot that helps people connect but still protects privacy",
+        "So you needn't worry about your identity is leaked 🛡️",
+        "You wanna try? #getstarted now 🤣"
+    ],
+    "help": [
+        "You should use the persistent menu to use the chatbot",
+        "If I don't show, you can use the below commands:",
+        "#getstarted: Start new conversation",
+        "#cancel: Cancel finding or the current conversation",
+        "#help: Show this 😅",
+        "#aboutme: Like its meaning 🤪"
+    ],
     "wrongcommand": {
         "intro": ["The commands must be started with #"],
         "questions": [
