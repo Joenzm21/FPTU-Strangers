@@ -243,9 +243,11 @@ func handleCommand(psid string, session *Session, command string) {
 				(cancelingState.LastStateInfo.(*QAState)).OnCancel(cancelingState.LastStateInfo)
 				break
 			case `finding`:
-				sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
 				el := cancelingState.LastStateInfo.(*list.Element)
 				queue.Remove(el)
+				if el != nil {
+					sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
+				}
 				break
 			}
 			session.State = `idle`
