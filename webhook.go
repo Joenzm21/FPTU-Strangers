@@ -59,7 +59,7 @@ func handleEvent(messaging gjson.Result) {
 			return
 		}
 		user := result.(User)
-		if user.Scam > 2 || user.Unfriendly > 5 {
+		if checkBanned(user) {
 			sendText(psid, templates.Get(`banned`).Value().([]interface{})...)
 			return
 		}
@@ -194,16 +194,9 @@ func handleCommand(psid string, session *Session, command string) {
 		if session.State == `chating` {
 			startAsking(psid, session, templates.Get(`rating`), checkRating, func() {
 				qaState := session.StateInfo.(*QAState)
-				result, found := sessionDictionary.Load(qaState.LastStateInfo)
-				if found {
-					othersession := result.(*Session)
-					othersession.State = `idle`
-					othersession.StateInfo = nil
-					sendText(qaState.LastStateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
-				}
 				session.State = `idle`
 				session.StateInfo = nil
-				result, found = userList.LoadAndDelete(psid)
+				result, found := userList.LoadAndDelete(qaState.LastStateInfo.(string))
 				if found {
 					user := result.(User)
 					switch qaState.Answers[0] {
@@ -216,11 +209,25 @@ func handleCommand(psid string, session *Session, command string) {
 						user.Scam++
 						break
 					}
-					userList.Store(psid, user)
+					userList.Store(qaState.LastStateInfo.(string), user)
 					if outro := qaState.Template.Get(`outro`); outro.Exists() {
 						sendText(psid, outro.Value().([]interface{})...)
 					}
 					changed = true
+
+					result, found = sessionDictionary.Load(qaState.LastStateInfo)
+					if found {
+						if checkBanned(user) {
+							sendText(qaState.LastStateInfo.(string), templates.Get(`banned`).Value().([]interface{})...)
+							session = nil
+							sessionDictionary.Delete(qaState.LastStateInfo.(string))
+						} else {
+							othersession := result.(*Session)
+							othersession.State = `idle`
+							othersession.StateInfo = nil
+							sendText(qaState.LastStateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
+						}
+					}
 				}
 			}, func(oldState interface{}) {})
 			return

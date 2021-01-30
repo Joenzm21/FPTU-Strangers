@@ -25,3 +25,7 @@ var checkRating = []func(answer string) bool{
 		return false
 	},
 }
+
+func checkBanned(user User) bool {
+	return user.Scam >= 2 || user.Unfriendly >= 5
+}
