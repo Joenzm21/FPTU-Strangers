@@ -35,7 +35,7 @@ func handleEvent(messaging gjson.Result) {
 		if !found {
 			session = &Session{}
 			session.Timeout = time.AfterFunc(time.Minute*5, func() {
-				onTimeout(psid, session)
+				onTimeout(psid)
 			})
 			startAsking(psid, session, templates.Get(`personal`), checkInfo, func() {
 				qaState := session.StateInfo.(*QAState)
@@ -67,7 +67,7 @@ func handleEvent(messaging gjson.Result) {
 			State: `idle`,
 		}
 		session.Timeout = time.AfterFunc(time.Minute*5, func() {
-			onTimeout(psid, session)
+			onTimeout(psid)
 		})
 		sessionDictionary.Store(psid, session)
 	} else {
@@ -217,12 +217,12 @@ func handleCommand(psid string, session *Session, command string) {
 
 					result, found = sessionDictionary.Load(qaState.LastStateInfo)
 					if found {
+						othersession := result.(*Session)
 						if checkBanned(user) {
 							sendText(qaState.LastStateInfo.(string), templates.Get(`banned`).Value().([]interface{})...)
-							session = nil
+							othersession = nil
 							sessionDictionary.Delete(qaState.LastStateInfo.(string))
 						} else {
-							othersession := result.(*Session)
 							othersession.State = `idle`
 							othersession.StateInfo = nil
 							sendText(qaState.LastStateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
@@ -294,10 +294,13 @@ func startAsking(psid string, session *Session, template gjson.Result, checkFunc
 	sendQuestion(psid, qaState.Template.Get(`questions`).Array(), 0)
 }
 
-func onTimeout(psid string, session *Session) {
-	if session == nil {
+func onTimeout(psid string) {
+	result, found := sessionDictionary.Load(psid)
+	if !found {
 		return
 	}
+	session := result.(*Session)
+	session.Timeout.Stop()
 	switch session.State {
 	case `finding`:
 		sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
