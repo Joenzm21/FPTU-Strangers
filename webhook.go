@@ -224,7 +224,7 @@ func handleCommand(psid string, session *Session, command string) {
 			return
 		}
 		if session.State == `asking` && (session.StateInfo.(*QAState)).Template == templates.Get(`rating`) {
-			sendText(psid, templates.Get(`rating.questions.#.errormessage`).String())
+			sendText(psid, templates.Get(`rating.questions`).Array()[0].Get(`errormessage`).String())
 			return
 		}
 		cancelingState := &CancelingState{
@@ -289,13 +289,22 @@ func onTimeout(psid string, session *Session) {
 	if session == nil {
 		return
 	}
-	if session.State == `chating` {
+	switch session.State {
+	case `finding`:
+		sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
+		el := session.StateInfo.(*list.Element)
+		queue.Remove(el)
+		break
+	case `chating`:
 		result, found := sessionDictionary.Load(session.StateInfo)
 		if found {
 			othersession := result.(*Session)
 			othersession.State = `idle`
 			othersession.StateInfo = nil
+			sendText(session.StateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
 		}
+		sendText(psid, templates.Get(`disconnected`).Value().([]interface{})...)
+		break
 	}
 	session = nil
 	sessionDictionary.Delete(psid)
