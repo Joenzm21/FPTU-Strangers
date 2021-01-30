@@ -43,9 +43,9 @@ type Button struct {
 
 //Session -
 type Session struct {
-	State      string
-	StateInfo  interface{}
-	LastActive time.Time
+	State     string
+	StateInfo interface{}
+	Timeout   *time.Timer
 }
 
 //CancelingState -

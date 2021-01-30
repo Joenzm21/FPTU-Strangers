@@ -33,9 +33,10 @@ func handleEvent(messaging gjson.Result) {
 	if !found {
 		result, found = userList.Load(psid)
 		if !found {
-			session = &Session{
-				LastActive: time.Now(),
-			}
+			session = &Session{}
+			session.Timeout = time.AfterFunc(time.Minute*5, func() {
+				onTimeout(psid, session)
+			})
 			startAsking(psid, session, templates.Get(`personal`), checkInfo, func() {
 				qaState := session.StateInfo.(*QAState)
 				session.State = `idle`
@@ -62,12 +63,13 @@ func handleEvent(messaging gjson.Result) {
 			sendText(psid, templates.Get(`banned`).Value().([]interface{})...)
 			return
 		}
-		session = &Session{
-			State:      `idle`,
-			LastActive: time.Now(),
-		}
+		session = &Session{}
+		session.Timeout = time.AfterFunc(time.Minute*5, func() {
+			onTimeout(psid, session)
+		})
 	} else {
 		session = result.(*Session)
+		session.Timeout.Reset(time.Minute * 5)
 	}
 	if message := messaging.Get(`message`); message.Exists() {
 		if text := message.Get(`text`); text.Exists() {
@@ -187,16 +189,12 @@ func handleCommand(psid string, session *Session, command string) {
 		if session.State == `chating` {
 			startAsking(psid, session, templates.Get(`rating`), checkRating, func() {
 				qaState := session.StateInfo.(*QAState)
-				if qaState.Answers[0] == `return` {
-					session.State = `chating`
-					session.StateInfo = qaState.LastStateInfo
-					return
-				}
 				result, found := sessionDictionary.Load(qaState.LastStateInfo)
 				if found {
 					othersession := result.(*Session)
 					othersession.State = `idle`
 					othersession.StateInfo = nil
+					sendText(qaState.LastStateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
 				}
 				session.State = `idle`
 				session.StateInfo = nil
@@ -282,4 +280,20 @@ func startAsking(psid string, session *Session, template gjson.Result, checkFunc
 		sendText(psid, intro.Value().([]interface{})...)
 	}
 	sendQuestion(psid, qaState.Template.Get(`questions`).Array(), 0)
+}
+
+func onTimeout(psid string, session *Session) {
+	if session == nil {
+		return
+	}
+	if session.State == `chating` {
+		result, found := sessionDictionary.Load(session.StateInfo)
+		if found {
+			othersession := result.(*Session)
+			othersession.State = `idle`
+			othersession.StateInfo = nil
+		}
+	}
+	session = nil
+	sessionDictionary.Delete(psid)
 }

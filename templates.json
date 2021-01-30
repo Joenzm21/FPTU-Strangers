@@ -49,16 +49,13 @@
                         "type": "postback",
                         "title": "Scam 👿",
                         "payload": "scam"
-                    },
-                    {
-                        "title": "Return ↩️",
-                        "payload": "return"
                     }
                 ],
                 "errormessage": "The answer only can be the above buttons"
             }
         ]
     },
+    "disconnected": ["This conversation has been canceled"],
     "banned": ["Sorry, but you have been banned", "Because of scamming or talking to other strangers unfriendly"],
     "notify": ["Hey 👋", "I found that person!", "Now feel free to talk 😆"],
     "getstarted": {

@@ -56,6 +56,8 @@ func (q *Queue) Remove(el *list.Element) {
 	if el != nil {
 		q.Container.Remove(el)
 		q.nonFull.Broadcast()
+		el.Value = nil
+		el = nil
 	}
 }
 
