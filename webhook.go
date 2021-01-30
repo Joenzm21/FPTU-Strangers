@@ -2,7 +2,6 @@ package main
 
 import (
 	"container/list"
-	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -29,7 +28,6 @@ func handleRequest(c *gin.Context) {
 }
 func handleEvent(messaging gjson.Result) {
 	psid := messaging.Get(`sender.id`).String()
-	fmt.Println(psid)
 	result, found := sessionDictionary.Load(psid)
 	var session *Session
 	if !found {
@@ -65,10 +63,13 @@ func handleEvent(messaging gjson.Result) {
 			sendText(psid, templates.Get(`banned`).Value().([]interface{})...)
 			return
 		}
-		session = &Session{}
+		session = &Session{
+			State: `idle`,
+		}
 		session.Timeout = time.AfterFunc(time.Minute*5, func() {
 			onTimeout(psid, session)
 		})
+		sessionDictionary.Store(psid, session)
 	} else {
 		session = result.(*Session)
 		session.Timeout.Reset(time.Minute * 5)
