@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/ahmetb/go-linq"
+	"github.com/getsentry/sentry-go"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tidwall/gjson"
 )
@@ -19,6 +20,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 var client = &http.Client{}
 
 func initMenu(configFile string) {
+	defer sentry.Recover()
 	payload, _ := ioutil.ReadFile(configFile)
 	request, _ := http.NewRequest(`POST`, `https://graph.facebook.com/v9.0/me/messenger_profile?access_token=`+PageAccessToken,
 		bytes.NewBuffer(payload))
@@ -113,7 +115,7 @@ func getGistFile(id string, filename string) gjson.Result {
 	} else {
 		result := gjson.GetBytes(payload, `files.`+filename+`.content`)
 		if !result.Exists() {
-			panic(`Not found`)
+			panic(`Gist file not found`)
 		}
 		return result
 	}

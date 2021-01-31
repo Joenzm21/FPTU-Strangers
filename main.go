@@ -2,7 +2,11 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
+	"time"
 
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 )
@@ -10,6 +14,15 @@ import (
 var templates gjson.Result
 
 func main() {
+	err := sentry.Init(sentry.ClientOptions{
+		Debug:   true,
+		Release: "fptu-strangers@1.0.0",
+	})
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+	defer sentry.Flush(2 * time.Second)
+	sentry.CaptureMessage("Server Started!")
 	initMenu(`getstarted.json`)
 	initMenu(`persistentmenu.json`)
 	download()
@@ -20,7 +33,9 @@ func main() {
 	startServer()
 }
 func startServer() {
+	defer sentry.Recover()
 	router := gin.Default()
+	router.Use(sentrygin.New(sentrygin.Options{}))
 	router.POST(`/webhook`, handleRequest)
 	router.GET(`/webhook`, func(c *gin.Context) {
 		queries := c.Request.URL.Query()

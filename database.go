@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"sync"
 	"time"
+
+	"github.com/getsentry/sentry-go"
 )
 
 var userList = &sync.Map{}
@@ -21,14 +23,14 @@ func backup() {
 			up[k.(string)] = v.(User)
 			return true
 		})
-		fmt.Println(up)
 		setGistFile(GistID, `users`, up)
 		changed = false
-		fmt.Println(`>>>>Backuped!<<<<`)
+		log.Println(`>>>>Backuped!<<<<`)
 	}
 }
 
 func download() {
+	defer sentry.Recover()
 	var list map[string]User
 	json.Unmarshal([]byte(getGistFile(GistID, `users`).String()), &list)
 	for k, v := range list {
