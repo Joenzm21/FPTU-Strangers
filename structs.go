@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sync"
 	"time"
 
 	"github.com/tidwall/gjson"
@@ -46,6 +47,7 @@ type Session struct {
 	State     string
 	StateInfo interface{}
 	Timeout   *time.Timer
+	Lock      *sync.Mutex
 }
 
 //CancelingState -

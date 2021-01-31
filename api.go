@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ahmetb/go-linq"
 	"github.com/getsentry/sentry-go"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tidwall/gjson"
@@ -30,8 +29,8 @@ func initMenu() {
 		panic(err)
 	}
 	payload, _ = ioutil.ReadAll(response.Body)
-	if errmess := gjson.Get(string(payload), `error.message`); errmess.Exists() {
-		panic(errors.New(errmess.String()))
+	if gjson.Get(string(payload), `error.message`).Exists() {
+		panic(errors.New(string(payload)))
 	}
 }
 
@@ -51,36 +50,34 @@ func initPersistentMenu(psid string) {
 		panic(err)
 	}
 	payload, _ = ioutil.ReadAll(response.Body)
-	if errmess := gjson.Get(string(payload), `error.message`); errmess.Exists() {
-		panic(errors.New(errmess.String()))
+	if gjson.Get(string(payload), `error.message`).Exists() {
+		panic(errors.New(string(payload)))
 	}
 }
 
-func sendRawMessages(psid string, objs ...interface{}) {
+func sendRawMessages(psid string, obj interface{}) {
 	jsonobj := Js{
 		`recipient`: Js{
 			`id`: psid,
 		},
+		`message`: obj,
 	}
-	for _, obj := range objs {
-		jsonobj[`message`] = obj
-		payload, _ := json.Marshal(jsonobj)
-		request, _ := http.NewRequest(`POST`, `https://graph.facebook.com/v9.0/me/messages?access_token=`+PageAccessToken,
-			bytes.NewBuffer(payload))
-		request.Header.Set("Content-Type", "application/json")
-		response, err := client.Do(request)
-		if err != nil {
-			panic(err)
-		}
-		payload, _ = ioutil.ReadAll(response.Body)
-		if errmess := gjson.Get(string(payload), `error.message`); errmess.Exists() {
-			panic(errors.New(errmess.String()))
-		}
+	payload, _ := json.Marshal(jsonobj)
+	request, _ := http.NewRequest(`POST`, `https://graph.facebook.com/v9.0/me/messages?access_token=`+PageAccessToken,
+		bytes.NewBuffer(payload))
+	request.Header.Set("Content-Type", "application/json")
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	payload, _ = ioutil.ReadAll(response.Body)
+	if gjson.Get(string(payload), `error.message`).Exists() {
+		panic(errors.New(string(payload)))
 	}
 }
 
 func sendPostback(psid string, postback Postback) {
-	sendRawMessages(psid, Js{
+	go sendRawMessages(psid, Js{
 		`attachment`: Js{
 			`type`:    `template`,
 			`payload`: postback,
@@ -99,17 +96,17 @@ func sendQuestion(psid string, questions []gjson.Result, counter int) {
 }
 
 func sendText(psid string, texts ...interface{}) {
-	var messages []interface{}
-	linq.From(texts).Select(func(v interface{}) interface{} {
-		return Js{
-			`text`: v,
-		}
-	}).ToSlice(&messages)
-	sendRawMessages(psid, messages...)
+	fulltext := ``
+	for _, text := range texts {
+		fulltext += text.(string) + "\n"
+	}
+	go sendRawMessages(psid, Js{
+		`text`: fulltext,
+	})
 }
 
 func sendAttachmentURL(psid string, attachmentType string, url string) {
-	sendRawMessages(psid, Js{
+	go sendRawMessages(psid, Js{
 		`attachment`: Js{
 			`type`: attachmentType,
 			`payload`: Js{
@@ -132,8 +129,8 @@ func getGistFile(id string, filename string) gjson.Result {
 	}
 	defer response.Body.Close()
 	payload, _ := ioutil.ReadAll(response.Body)
-	if errormessage := gjson.GetBytes(payload, `message`); errormessage.Exists() {
-		panic(errormessage.String())
+	if gjson.GetBytes(payload, `message`).Exists() {
+		panic(errors.New(string(payload)))
 	} else {
 		result := gjson.GetBytes(payload, `files.`+filename+`.content`)
 		if !result.Exists() {
@@ -162,8 +159,8 @@ func setGistFile(id string, filename string, obj interface{}) error {
 	}
 	defer response.Body.Close()
 	payload, _ = ioutil.ReadAll(response.Body)
-	if errormessage := gjson.GetBytes(payload, `message`); errormessage.Exists() {
-		panic(errormessage.String())
+	if gjson.GetBytes(payload, `message`).Exists() {
+		panic(errors.New(string(payload)))
 	}
 	return nil
 }

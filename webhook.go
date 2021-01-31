@@ -34,7 +34,9 @@ func handleEvent(messaging gjson.Result) {
 		result, found = userList.Load(psid)
 		if !found {
 			initPersistentMenu(psid)
-			session = &Session{}
+			session = &Session{
+				Lock: &sync.Mutex{},
+			}
 			session.Timeout = time.AfterFunc(time.Minute*5, func() {
 				onTimeout(psid)
 			})
@@ -66,6 +68,7 @@ func handleEvent(messaging gjson.Result) {
 		}
 		session = &Session{
 			State: `idle`,
+			Lock:  &sync.Mutex{},
 		}
 		session.Timeout = time.AfterFunc(time.Minute*5, func() {
 			onTimeout(psid)
@@ -75,6 +78,7 @@ func handleEvent(messaging gjson.Result) {
 		session = result.(*Session)
 		session.Timeout.Reset(time.Minute * 5)
 	}
+	session.Lock.Lock()
 	if message := messaging.Get(`message`); message.Exists() {
 		if text := message.Get(`text`); text.Exists() {
 			if session.State != `canceling` && strings.HasPrefix(text.String(), `#`) {
@@ -111,6 +115,7 @@ func handleEvent(messaging gjson.Result) {
 			break
 		}
 	}
+	session.Lock.Unlock()
 }
 
 func handleText(psid string, session *Session, text string) {
