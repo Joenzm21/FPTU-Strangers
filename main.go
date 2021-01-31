@@ -22,9 +22,9 @@ func main() {
 		log.Fatalf("sentry.Init: %s", err)
 	}
 	defer sentry.Flush(2 * time.Second)
+	defer sentry.Recover()
 	sentry.CaptureMessage("Server Started!")
-	initMenu(`getstarted.json`)
-	initMenu(`persistentmenu.json`)
+	initMenu()
 	download()
 	payload, _ := ioutil.ReadFile(`templates.json`)
 	templates = gjson.ParseBytes(payload)

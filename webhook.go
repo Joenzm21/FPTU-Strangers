@@ -21,7 +21,7 @@ func handleRequest(c *gin.Context) {
 		return
 	}
 	for _, entry := range gjson.GetBytes(bytes, `entry`).Array() {
-		go handleEvent(entry.Get(`messaging`).Array()[0])
+		handleEvent(entry.Get(`messaging`).Array()[0])
 	}
 	c.Writer.WriteString(`EVENT_RECEIVED`)
 	c.AbortWithStatus(200)
@@ -33,6 +33,7 @@ func handleEvent(messaging gjson.Result) {
 	if !found {
 		result, found = userList.Load(psid)
 		if !found {
+			initPersistentMenu(psid)
 			session = &Session{}
 			session.Timeout = time.AfterFunc(time.Minute*5, func() {
 				onTimeout(psid)
@@ -187,6 +188,7 @@ func handleCommand(psid string, session *Session, command string) {
 			if outro := qaState.Template.Get(`outro`); outro.Exists() {
 				sendText(psid, outro.Value().([]interface{})...)
 			}
+			update.Broadcast()
 		}, func(oldState interface{}) {})
 		break
 	case `#aboutme`:
@@ -260,13 +262,14 @@ func handleCommand(psid string, session *Session, command string) {
 				break
 			case `finding`:
 				el := cancelingState.LastStateInfo.(*list.Element)
-				queue.Remove(el)
 				if el != nil {
+					queue.Remove(el)
 					sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
 				}
 				break
 			}
 			session.State = `idle`
+			session.StateInfo = nil
 		}
 		var postback Postback
 		json.Unmarshal([]byte(templates.Get(`cancel`).Raw), &postback)

@@ -41,7 +41,7 @@ func (q *Queue) Enqueue(item interface{}) *list.Element {
 func (q *Queue) Dequeue() interface{} {
 	q.Lock.RLock()
 	back := q.Container.Back()
-	for back == nil {
+	for queue.Container.Len() < 2 {
 		q.nonEmpty.Wait()
 		back = q.Container.Back()
 	}

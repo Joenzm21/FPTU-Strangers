@@ -2,16 +2,22 @@ package main
 
 import (
 	"math"
+	"sync"
+
+	"github.com/getsentry/sentry-go"
 )
 
 var queue = NewQueue(Limit)
 var roundCounter = 0
-var update chan struct{}
+var rrLock = &sync.Mutex{}
+var update = sync.NewCond(rrLock)
 
 func startRR() {
+	defer sentry.Recover()
+	rrLock.Lock()
 	for {
 		for roundCounter > 0 && roundCounter >= queue.Container.Len() {
-			<-update
+			update.Wait()
 			roundCounter = 0
 		}
 
@@ -41,6 +47,7 @@ func startRR() {
 			next = next.Next()
 		}
 		if !success && !queue.isFull() && request1.Attempts < MaxAttempt {
+			roundCounter++
 			request1.Attempts++
 			queue.Enqueue(request1)
 		} else if !success {
@@ -52,7 +59,7 @@ func startRR() {
 func dropRequest(request *FindingRequest) {
 	request.Session.State = `idle`
 	request.Session.StateInfo = nil
-	sendText(request.Psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
+	sendText(request.Psid, templates.Get(`getstarted.onDrop`).Value().([]interface{})...)
 }
 
 func isSuitable(request1 *FindingRequest, request2 *FindingRequest) bool {

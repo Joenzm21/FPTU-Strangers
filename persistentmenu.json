@@ -1,30 +1,28 @@
-{
-    "persistent_menu": [
-        {
-            "locale": "default",
-            "composer_input_disabled": false,
-            "call_to_actions": [
-                {
-                    "type": "postback",
-                    "title": "Get started",
-                    "payload": "#getstarted"
-                },
-                {
-                    "type": "postback",
-                    "title": "Cancel",
-                    "payload": "#cancel"
-                },
-                {
-                    "type": "postback",
-                    "title": "Help",
-                    "payload": "#help"
-                },
-                {
-                    "type": "postback",
-                    "title": "About me",
-                    "payload": "#aboutme"
-                }
-            ]
-        }
-    ]
-}
+[
+    {
+        "locale": "default",
+        "composer_input_disabled": false,
+        "call_to_actions": [
+            {
+                "type": "postback",
+                "title": "Get started",
+                "payload": "#getstarted"
+            },
+            {
+                "type": "postback",
+                "title": "Cancel",
+                "payload": "#cancel"
+            },
+            {
+                "type": "postback",
+                "title": "Help",
+                "payload": "#help"
+            },
+            {
+                "type": "postback",
+                "title": "About me",
+                "payload": "#aboutme"
+            }
+        ]
+    }
+]

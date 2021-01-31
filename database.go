@@ -13,6 +13,7 @@ var backupInterval = time.NewTicker(time.Minute * 1)
 var changed = false
 
 func backup() {
+	defer sentry.Recover()
 	for {
 		<-backupInterval.C
 		if !changed {
