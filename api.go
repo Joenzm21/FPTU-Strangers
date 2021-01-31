@@ -55,7 +55,7 @@ func initPersistentMenu(psid string) {
 	}
 }
 
-func sendRawMessages(psid string, obj interface{}) {
+func sendRawMessage(psid string, obj interface{}) {
 	jsonobj := Js{
 		`recipient`: Js{
 			`id`: psid,
@@ -77,7 +77,7 @@ func sendRawMessages(psid string, obj interface{}) {
 }
 
 func sendPostback(psid string, postback Postback) {
-	go sendRawMessages(psid, Js{
+	go sendRawMessage(psid, Js{
 		`attachment`: Js{
 			`type`:    `template`,
 			`payload`: postback,
@@ -100,13 +100,13 @@ func sendText(psid string, texts ...interface{}) {
 	for _, text := range texts {
 		fulltext += text.(string) + "\n"
 	}
-	go sendRawMessages(psid, Js{
+	go sendRawMessage(psid, Js{
 		`text`: fulltext,
 	})
 }
 
 func sendAttachmentURL(psid string, attachmentType string, url string) {
-	go sendRawMessages(psid, Js{
+	go sendRawMessage(psid, Js{
 		`attachment`: Js{
 			`type`: attachmentType,
 			`payload`: Js{
