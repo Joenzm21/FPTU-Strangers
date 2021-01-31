@@ -30,6 +30,7 @@
             }
         ]
     },
+    "attachmentblocking": "This action is only allowed during the conversation",
     "nothing": "You don't have anything to cancel",
     "already": {
         "template_type": "button",

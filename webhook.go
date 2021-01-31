@@ -84,14 +84,22 @@ func handleEvent(messaging gjson.Result) {
 				handleCommand(psid, session, `#`+text.String())
 			}
 		}
-		if attachments := message.Get(`attachments`); session.State == `chating` && attachments.Exists() {
-			handleAttachment(psid, session, attachments)
+		if attachments := message.Get(`attachments`); attachments.Exists() {
+			if session.State == `chating` {
+				handleAttachment(psid, session, attachments)
+			} else {
+				sendText(psid, templates.Get(`attachmentblocking`).String())
+			}
 		}
 	}
 	if postback := messaging.Get(`postback`); postback.Exists() {
 		payload := postback.Get(`payload`).String()
 		switch session.State {
 		case `asking`:
+			if strings.HasPrefix(payload, `#`) {
+				handleCommand(psid, session, payload)
+				break
+			}
 			handleAnswer(psid, session, payload)
 			break
 		case `canceling`:
@@ -150,6 +158,7 @@ func handleAttachment(psid string, session *Session, attachments gjson.Result) {
 	}
 }
 func handleCommand(psid string, session *Session, command string) {
+	command = strings.ToLower(strings.Replace(command, ` `, ``, -1))
 	switch command {
 	case `#getstarted`:
 		if session.State == `finding` || session.State == `chating` {

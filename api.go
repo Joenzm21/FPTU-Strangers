@@ -18,6 +18,20 @@ type Js map[string]interface{}
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 var client = &http.Client{}
 
+func initMenu(configFile string) {
+	payload, _ := ioutil.ReadFile(configFile)
+	request, _ := http.NewRequest(`POST`, `https://graph.facebook.com/v9.0/me/messenger_profile?access_token=`+PageAccessToken,
+		bytes.NewBuffer(payload))
+	request.Header.Set("Content-Type", "application/json")
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	payload, _ = ioutil.ReadAll(response.Body)
+	if errmess := gjson.Get(string(payload), `error.message`); errmess.Exists() {
+		panic(errors.New(errmess.String()))
+	}
+}
 func sendRawMessages(psid string, objs ...interface{}) {
 	jsonobj := Js{
 		`recipient`: Js{

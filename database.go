@@ -7,7 +7,6 @@ import (
 )
 
 var userList = &sync.Map{}
-var banned = &sync.Map{}
 var backupInterval = time.NewTicker(time.Minute * 1)
 var changed = false
 

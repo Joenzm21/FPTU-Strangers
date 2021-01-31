@@ -19,7 +19,7 @@ var checkInfo = []func(answer string) bool{
 var checkRating = []func(answer string) bool{
 	func(answer string) bool {
 		switch answer {
-		case `friendly`, `unfriendly`, `scam`, `return`:
+		case `friendly`, `unfriendly`, `scam`:
 			return true
 		}
 		return false

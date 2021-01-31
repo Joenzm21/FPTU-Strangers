@@ -10,6 +10,8 @@ import (
 var templates gjson.Result
 
 func main() {
+	initMenu(`getstarted.json`)
+	initMenu(`persistentmenu.json`)
 	download()
 	payload, _ := ioutil.ReadFile(`templates.json`)
 	templates = gjson.ParseBytes(payload)
