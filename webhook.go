@@ -267,11 +267,10 @@ func handleCommand(psid string, session *Session, command string) {
 				(cancelingState.LastStateInfo.(*QAState)).OnCancel(cancelingState.LastStateInfo)
 				break
 			case `finding`:
-				el := cancelingState.LastStateInfo.(*list.Element)
-				if el != nil {
+				if el := cancelingState.LastStateInfo.(*list.Element); el != nil {
 					queue.Remove(el)
-					sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
 				}
+				sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
 				break
 			}
 			session.State = `idle`
@@ -321,9 +320,10 @@ func onTimeout(psid string) {
 	session.Timeout.Stop()
 	switch session.State {
 	case `finding`:
+		if el := session.StateInfo.(*list.Element); el != nil {
+			queue.Remove(el)
+		}
 		sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
-		el := session.StateInfo.(*list.Element)
-		queue.Remove(el)
 		break
 	case `chating`:
 		result, found := sessionDictionary.Load(session.StateInfo)

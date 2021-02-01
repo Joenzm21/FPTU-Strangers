@@ -37,20 +37,6 @@ func (q *Queue) Enqueue(item interface{}) *list.Element {
 	return result
 }
 
-//Dequeue -
-func (q *Queue) Dequeue() interface{} {
-	q.Lock.RLock()
-	back := q.Container.Back()
-	for queue.Container.Len() < 2 {
-		q.nonEmpty.Wait()
-		back = q.Container.Back()
-	}
-	result := q.Container.Remove(back)
-	q.Lock.RUnlock()
-	q.nonFull.Broadcast()
-	return result
-}
-
 //Remove -
 func (q *Queue) Remove(el *list.Element) {
 	if el != nil {
@@ -61,16 +47,14 @@ func (q *Queue) Remove(el *list.Element) {
 	}
 }
 
-//Back -
-func (q *Queue) Back() *list.Element {
+//TwoBack -
+func (q *Queue) TwoBack() *list.Element {
 	q.Lock.RLock()
-	back := q.Container.Back()
-	for back == nil {
+	for q.Container.Len() < 2 {
 		q.nonEmpty.Wait()
-		back = q.Container.Back()
 	}
 	q.Lock.RUnlock()
-	return back
+	return q.Container.Back()
 }
 
 func (q *Queue) isFull() bool {

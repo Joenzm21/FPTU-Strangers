@@ -17,13 +17,21 @@ func startRR() {
 	defer sentry.Recover()
 	rrLock.Lock()
 	for {
-		request1 := queue.Dequeue().(*FindingRequest)
-		next := queue.Back()
+		first := queue.TwoBack()
+		prev := first.Prev()
+		request1 := first.Value.(*FindingRequest)
+		if request1.Session.State != `finding` {
+			queue.Remove(first)
+			continue
+		}
 		success := false
-		for next != nil {
-			request2 := next.Value.(*FindingRequest)
+		for prev != nil {
+			request2 := prev.Value.(*FindingRequest)
+			if request2.Session.State != `finding` {
+				queue.Remove(prev)
+				continue
+			}
 			if isSuitable(request1, request2) {
-				queue.Remove(next)
 				request1.Session.State, request2.Session.State = `chating`, `chating`
 				request1.Session.StateInfo, request2.Session.StateInfo = request2.Psid, request1.Psid
 				notify := templates.Get(`notify`).Value().([]interface{})
@@ -33,13 +41,14 @@ func startRR() {
 				roundCounter = 0
 				break
 			}
-			next = next.Next()
+			prev = prev.Prev()
 		}
 		if !success {
 			if !queue.isFull() && time.Now().Sub(request1.Time) < 5*time.Minute {
-				request1.Old = true
-				queue.Enqueue(request1)
 				roundCounter++
+				queue.Lock.Lock()
+				queue.Container.MoveToFront(first)
+				queue.Lock.Unlock()
 			} else {
 				dropRequest(request1)
 			}
