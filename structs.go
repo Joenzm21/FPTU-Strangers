@@ -27,12 +27,13 @@ type QAState struct {
 
 //FindingRequest -
 type FindingRequest struct {
-	Psid     string
-	Year     int
-	Gender   string
-	Attempts int
-	User     User
-	Session  *Session
+	Psid    string
+	Year    int
+	Gender  string
+	User    User
+	Session *Session
+	Time    time.Time
+	Old     bool
 }
 
 //Button -

@@ -183,17 +183,18 @@ func handleCommand(psid string, session *Session, command string) {
 			result, _ := userList.Load(psid)
 			age, _ := strconv.Atoi(qaState.Answers[1].(string))
 			session.StateInfo = queue.Enqueue(&FindingRequest{
-				Psid:     psid,
-				Gender:   qaState.Answers[0].(string),
-				Year:     time.Now().Year() - age,
-				Attempts: 0,
-				Session:  session,
-				User:     result.(User),
+				Psid:    psid,
+				Gender:  qaState.Answers[0].(string),
+				Year:    time.Now().Year() - age,
+				Old:     false,
+				Time:    time.Now(),
+				Session: session,
+				User:    result.(User),
 			})
 			if outro := qaState.Template.Get(`outro`); outro.Exists() {
 				sendText(psid, outro.Value().([]interface{})...)
 			}
-			update.Broadcast()
+			update.Signal()
 		}, func(oldState interface{}) {})
 		break
 	case `#aboutme`:

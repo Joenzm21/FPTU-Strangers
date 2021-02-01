@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"sync"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 )
@@ -16,11 +17,6 @@ func startRR() {
 	defer sentry.Recover()
 	rrLock.Lock()
 	for {
-		for roundCounter > 0 && roundCounter >= queue.Container.Len() {
-			update.Wait()
-			roundCounter = 0
-		}
-
 		request1 := queue.Dequeue().(*FindingRequest)
 		next := queue.Back()
 		success := false
@@ -39,12 +35,18 @@ func startRR() {
 			}
 			next = next.Next()
 		}
-		if !success && !queue.isFull() && request1.Attempts < MaxAttempt {
-			roundCounter++
-			request1.Attempts++
-			queue.Enqueue(request1)
-		} else if !success {
-			dropRequest(request1)
+		if !success {
+			if !queue.isFull() && time.Now().Sub(request1.Time) < 5*time.Minute {
+				request1.Old = true
+				queue.Enqueue(request1)
+				roundCounter++
+			} else {
+				dropRequest(request1)
+			}
+		}
+		for roundCounter >= queue.Container.Len() {
+			update.Wait()
+			roundCounter = 0
 		}
 	}
 }
@@ -56,7 +58,7 @@ func dropRequest(request *FindingRequest) {
 }
 
 func isSuitable(request1 *FindingRequest, request2 *FindingRequest) bool {
-	if request1.Attempts > 0 && request2.Attempts > 0 {
+	if request1.Old && request2.Old {
 		return false
 	}
 	return request1.User.Gender == request2.Gender &&
