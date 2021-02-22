@@ -11,8 +11,8 @@ var checkInfo = []func(answer string) bool{
 		return false
 	},
 	func(answer string) bool {
-		_, err := strconv.Atoi(answer)
-		return err == nil
+		age, err := strconv.Atoi(answer)
+		return err == nil && age > 15 && age <= 35
 	},
 }
 

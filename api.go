@@ -85,13 +85,13 @@ func sendPostback(psid string, postback Postback) {
 	})
 }
 
-func sendQuestion(psid string, questions []gjson.Result, counter int) {
-	if questions[counter].Get(`buttons`).Exists() {
+func sendPostbackOrText(psid string, obj gjson.Result) {
+	if obj.Get(`buttons`).Exists() {
 		var postback Postback
-		json.Unmarshal([]byte(questions[counter].Raw), &postback)
+		json.Unmarshal([]byte(obj.Raw), &postback)
 		sendPostback(psid, postback)
 	} else {
-		sendText(psid, questions[counter].Get(`text`).String())
+		sendText(psid, obj.Get(`text`).String())
 	}
 }
 
@@ -101,6 +101,16 @@ func sendText(psid string, texts ...interface{}) {
 		fulltext += text.(string) + "\n"
 	}
 	go sendRawMessage(psid, Js{
+		`text`: fulltext,
+	})
+}
+
+func sendTextSync(psid string, texts ...interface{}) {
+	fulltext := ``
+	for _, text := range texts {
+		fulltext += text.(string) + "\n"
+	}
+	sendRawMessage(psid, Js{
 		`text`: fulltext,
 	})
 }

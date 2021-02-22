@@ -37,21 +37,18 @@ func handleEvent(messaging gjson.Result) {
 			session = &Session{
 				Lock: &sync.Mutex{},
 			}
-			session.Timeout = time.AfterFunc(time.Minute*5, func() {
-				onTimeout(psid)
-			})
 			startAsking(psid, session, templates.Get(`personal`), checkInfo, func() {
 				qaState := session.StateInfo.(*QAState)
 				session.State = `idle`
-				year, _ := strconv.Atoi(qaState.Answers[1].(string))
+				age, _ := strconv.Atoi(qaState.Answers[1].(string))
 				userList.Store(psid, User{
 					Gender:     qaState.Answers[0].(string),
-					Year:       year,
+					Year:       time.Now().Year() - age,
 					Scam:       0,
 					Unfriendly: 0,
 				})
 				if outro := qaState.Template.Get(`outro`); outro.Exists() {
-					sendText(psid, outro.Value().([]interface{})...)
+					sendPostbackOrText(psid, outro)
 				}
 				session.StateInfo = nil
 				changed = true
@@ -70,13 +67,9 @@ func handleEvent(messaging gjson.Result) {
 			State: `idle`,
 			Lock:  &sync.Mutex{},
 		}
-		session.Timeout = time.AfterFunc(time.Minute*5, func() {
-			onTimeout(psid)
-		})
 		sessionDictionary.Store(psid, session)
 	} else {
 		session = result.(*Session)
-		session.Timeout.Reset(time.Minute * 5)
 	}
 	session.Lock.Lock()
 	if message := messaging.Get(`message`); message.Exists() {
@@ -91,7 +84,7 @@ func handleEvent(messaging gjson.Result) {
 		}
 		if attachments := message.Get(`attachments`); attachments.Exists() {
 			if session.State == `chating` {
-				handleAttachment(psid, session, attachments)
+				handleAttachment(session, attachments)
 			} else {
 				sendText(psid, templates.Get(`attachmentblocking`).String())
 			}
@@ -152,13 +145,13 @@ func handleAnswer(psid string, session *Session, answer string) {
 		if qaState.Counter == len(qaState.Answers) {
 			qaState.OnDone()
 		} else {
-			sendQuestion(psid, qaState.Template.Get(`questions`).Array(), qaState.Counter)
+			sendPostbackOrText(psid, qaState.Template.Get(`questions`).Array()[qaState.Counter])
 		}
 	} else {
 		sendText(psid, qaState.Template.Get(`questions`).Array()[qaState.Counter].Get(`errormessage`).String())
 	}
 }
-func handleAttachment(psid string, session *Session, attachments gjson.Result) {
+func handleAttachment(session *Session, attachments gjson.Result) {
 	for _, item := range attachments.Array() {
 		sendAttachmentURL(session.StateInfo.(string), item.Get(`type`).String(), item.Get(`payload.url`).String())
 	}
@@ -167,7 +160,7 @@ func handleCommand(psid string, session *Session, command string) {
 	command = strings.ToLower(strings.Replace(command, ` `, ``, -1))
 	switch command {
 	case `#getstarted`:
-		if session.State == `finding` || session.State == `chating` {
+		if session.State == `finding` || session.State == `chating` || session.State == `asking` {
 			var postback Postback
 			json.Unmarshal([]byte(templates.Get(`already`).Raw), &postback)
 			sendPostback(psid, postback)
@@ -179,6 +172,9 @@ func handleCommand(psid string, session *Session, command string) {
 		}
 		startAsking(psid, session, templates.Get(`getstarted`), checkInfo, func() {
 			qaState := session.StateInfo.(*QAState)
+			if outro := qaState.Template.Get(`outro`); outro.Exists() {
+				sendTextSync(psid, outro.Value().([]interface{})...)
+			}
 			session.State = `finding`
 			result, _ := userList.Load(psid)
 			age, _ := strconv.Atoi(qaState.Answers[1].(string))
@@ -187,13 +183,9 @@ func handleCommand(psid string, session *Session, command string) {
 				Gender:  qaState.Answers[0].(string),
 				Year:    time.Now().Year() - age,
 				Old:     false,
-				Time:    time.Now(),
 				Session: session,
 				User:    result.(User),
 			})
-			if outro := qaState.Template.Get(`outro`); outro.Exists() {
-				sendText(psid, outro.Value().([]interface{})...)
-			}
 			update.Signal()
 		}, func(oldState interface{}) {})
 		break
@@ -209,6 +201,11 @@ func handleCommand(psid string, session *Session, command string) {
 			return
 		}
 		if session.State == `chating` {
+			result, found := sessionDictionary.Load(session.StateInfo)
+			if !found || (result.(*Session)).State != `chating` {
+				sendText(psid, templates.Get("notsupported").String())
+				return
+			}
 			startAsking(psid, session, templates.Get(`rating`), checkRating, func() {
 				qaState := session.StateInfo.(*QAState)
 				session.State = `idle`
@@ -240,9 +237,44 @@ func handleCommand(psid string, session *Session, command string) {
 							othersession = nil
 							sessionDictionary.Delete(qaState.LastStateInfo.(string))
 						} else {
-							othersession.State = `idle`
-							othersession.StateInfo = nil
-							sendText(qaState.LastStateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
+							sendTextSync(qaState.LastStateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
+							startAsking(qaState.LastStateInfo.(string), othersession, templates.Get(`rating`), checkRating, func() {
+								otherPsid := qaState.LastStateInfo.(string)
+								qaState := othersession.StateInfo.(*QAState)
+								othersession.State = `idle`
+								othersession.StateInfo = nil
+
+								result, found := userList.LoadAndDelete(psid)
+								if found {
+									user := result.(User)
+									switch qaState.Answers[0] {
+									case `friendly`:
+										break
+									case `unfriendly`:
+										user.Unfriendly++
+										break
+									case `scam`:
+										user.Scam++
+										break
+									}
+									userList.Store(psid, user)
+									if outro := qaState.Template.Get(`outro`); outro.Exists() {
+										sendText(otherPsid, outro.Value().([]interface{})...)
+									}
+									changed = true
+
+									if session != nil {
+										if checkBanned(user) {
+											sendText(psid, templates.Get(`banned`).Value().([]interface{})...)
+											session = nil
+											sessionDictionary.Delete(psid)
+										}
+									}
+								}
+							}, func(oldState interface{}) {
+								othersession.State = `idle`
+								othersession.StateInfo = nil
+							})
 						}
 					}
 				}
@@ -306,36 +338,7 @@ func startAsking(psid string, session *Session, template gjson.Result, checkFunc
 	session.StateInfo = qaState
 	sessionDictionary.Store(psid, session)
 	if intro := qaState.Template.Get(`intro`); intro.Exists() {
-		sendText(psid, intro.Value().([]interface{})...)
+		sendTextSync(psid, intro.Value().([]interface{})...)
 	}
-	sendQuestion(psid, qaState.Template.Get(`questions`).Array(), 0)
-}
-
-func onTimeout(psid string) {
-	result, found := sessionDictionary.Load(psid)
-	if !found {
-		return
-	}
-	session := result.(*Session)
-	session.Timeout.Stop()
-	switch session.State {
-	case `finding`:
-		if el := session.StateInfo.(*list.Element); el != nil {
-			queue.Remove(el)
-		}
-		sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
-		break
-	case `chating`:
-		result, found := sessionDictionary.Load(session.StateInfo)
-		if found {
-			othersession := result.(*Session)
-			othersession.State = `idle`
-			othersession.StateInfo = nil
-			sendText(session.StateInfo.(string), templates.Get(`disconnected`).Value().([]interface{})...)
-		}
-		sendText(psid, templates.Get(`disconnected`).Value().([]interface{})...)
-		break
-	}
-	session = nil
-	sessionDictionary.Delete(psid)
+	sendPostbackOrText(psid, qaState.Template.Get(`questions`).Array()[0])
 }

@@ -1,11 +1,9 @@
 package main
 
 import (
+	"github.com/getsentry/sentry-go"
 	"math"
 	"sync"
-	"time"
-
-	"github.com/getsentry/sentry-go"
 )
 
 var queue = NewQueue(Limit)
@@ -39,17 +37,20 @@ func startRR() {
 				sendText(request2.Psid, notify...)
 				success = true
 				roundCounter = 0
+				queue.Remove(first)
+				queue.Remove(prev)
 				break
 			}
 			prev = prev.Prev()
 		}
 		if !success {
-			if !queue.isFull() && time.Now().Sub(request1.Time) < 5*time.Minute {
+			if !queue.isFull() {
 				roundCounter++
 				queue.Lock.Lock()
 				queue.Container.MoveToFront(first)
 				queue.Lock.Unlock()
 			} else {
+				queue.Remove(first)
 				dropRequest(request1)
 			}
 		}

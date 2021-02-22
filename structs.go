@@ -32,7 +32,6 @@ type FindingRequest struct {
 	Gender  string
 	User    User
 	Session *Session
-	Time    time.Time
 	Old     bool
 }
 
