@@ -23,7 +23,6 @@ func main() {
 	}
 	defer sentry.Flush(2 * time.Second)
 	defer sentry.Recover()
-	sentry.CaptureMessage("Server Started!")
 	initMenu()
 	download()
 	payload, _ := ioutil.ReadFile(`templates.json`)

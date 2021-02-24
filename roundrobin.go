@@ -8,22 +8,30 @@ import (
 
 var queue = NewQueue(Limit)
 var roundCounter = 0
-var rrLock = &sync.Mutex{}
-var update = sync.NewCond(rrLock)
+var rrLock = &sync.RWMutex{}
+var update = sync.NewCond(rrLock.RLocker())
 
 func startRR() {
 	defer sentry.Recover()
-	rrLock.Lock()
 	for {
 		first := queue.TwoBack()
 		prev := first.Prev()
+		rrLock.RLock()
 		request1 := first.Value.(*FindingRequest)
 		if request1.Session.State != `finding` {
 			queue.Remove(first)
 			continue
 		}
 		success := false
-		for prev != nil {
+		for {
+			for prev != nil && prev.Value == nil {
+				old := prev
+				prev = old.Prev()
+				queue.Remove(old)
+			}
+			if prev == nil {
+				break
+			}
 			request2 := prev.Value.(*FindingRequest)
 			if request2.Session.State != `finding` {
 				queue.Remove(prev)
@@ -44,20 +52,24 @@ func startRR() {
 			prev = prev.Prev()
 		}
 		if !success {
-			if !queue.isFull() {
+			if !queue.isFull() && request1 != nil {
 				roundCounter++
+				request1.Old = true
 				queue.Lock.Lock()
 				queue.Container.MoveToFront(first)
 				queue.Lock.Unlock()
-			} else {
+			} else if first != nil {
 				queue.Remove(first)
-				dropRequest(request1)
+				if request1 != nil {
+					dropRequest(request1)
+				}
 			}
 		}
 		for roundCounter >= queue.Container.Len() {
 			update.Wait()
 			roundCounter = 0
 		}
+		rrLock.Unlock()
 	}
 }
 
