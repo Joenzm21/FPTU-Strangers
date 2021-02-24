@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/getsentry/sentry-go"
+	"log"
 	"math"
 	"sync"
 )
@@ -47,6 +48,7 @@ func startRR() {
 				roundCounter = 0
 				queue.Remove(first)
 				queue.Remove(prev)
+				log.Println("Paired ", request1.Psid, request2.Psid)
 				break
 			}
 			prev = prev.Prev()
@@ -77,6 +79,7 @@ func dropRequest(request *FindingRequest) {
 	request.Session.State = `idle`
 	request.Session.StateInfo = nil
 	sendText(request.Psid, templates.Get(`getstarted.onDrop`).Value().([]interface{})...)
+	log.Println("Dropped request of ", request.Psid)
 }
 
 func isSuitable(request1 *FindingRequest, request2 *FindingRequest) bool {

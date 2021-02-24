@@ -33,7 +33,7 @@ func main() {
 }
 func startServer() {
 	defer sentry.Recover()
-	router := gin.Default()
+	router := gin.New()
 	router.Use(sentrygin.New(sentrygin.Options{}))
 	router.POST(`/webhook`, handleRequest)
 	router.GET(`/webhook`, func(c *gin.Context) {

@@ -3,6 +3,7 @@ package main
 import (
 	"container/list"
 	"io/ioutil"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -52,6 +53,7 @@ func handleEvent(messaging gjson.Result) {
 				}
 				session.StateInfo = nil
 				changed = true
+				log.Println("Just have a new user! ID: ", psid)
 			}, func(oldState interface{}) {
 				sendText(psid, (oldState.(*QAState)).Template.Get(`onCancel`).Value().([]interface{})...)
 				sessionDictionary.Delete(psid)
@@ -68,6 +70,7 @@ func handleEvent(messaging gjson.Result) {
 			Lock:  &sync.Mutex{},
 		}
 		sessionDictionary.Store(psid, session)
+		log.Println("New user session! ID: ", psid)
 	} else {
 		session = result.(*Session)
 	}
@@ -187,6 +190,7 @@ func handleCommand(psid string, session *Session, command string) {
 				User:    result.(User),
 			})
 			update.Signal()
+			log.Println("Received a request from ID: ", psid)
 		}, func(oldState interface{}) {})
 		break
 	case `#aboutme`:
@@ -305,6 +309,7 @@ func handleCommand(psid string, session *Session, command string) {
 						queue.Remove(el)
 						sendText(psid, templates.Get(`getstarted.onCancel`).Value().([]interface{})...)
 						rrLock.Unlock()
+						log.Println("Canneled request of ", psid)
 					}()
 				}
 				break
