@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/getsentry/sentry-go"
 	"log"
 	"math"
 	"sync"
+
+	"github.com/getsentry/sentry-go"
 )
 
 var queue = NewQueue(Limit)
@@ -71,7 +72,7 @@ func startRR() {
 			update.Wait()
 			roundCounter = 0
 		}
-		rrLock.Unlock()
+		rrLock.RUnlock()
 	}
 }
 
